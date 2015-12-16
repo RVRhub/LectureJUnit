@@ -8,7 +8,7 @@ import java.util.Collection;
 public interface UserDAO
 {
     public User findById(long id) throws SQLException;
-    public boolean create() throws SQLException;
+    public long create(User user) throws SQLException;
     public void update() throws SQLException;
     public void delete() throws SQLException;
 }
