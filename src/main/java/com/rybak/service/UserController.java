@@ -19,21 +19,19 @@ public class UserController
         this.userDAO = userDAO;
     }
 
-    public boolean showUsername(long id) throws UserSQLException {
+    public boolean ifUserExists(long id) throws UserSQLException {
 
         try
         {
-            User currentUser = userDAO.findById(id);
-
-            if(currentUser == null)
-            {
-                return false;
+            if(id > 0) {
+                User currentUser = userDAO.findById(id);
+                return currentUser != null;
             }
-            return true;
+
+            return false;
         }
         catch (SQLException e)
         {
-            //log.error(e, e);
             throw new UserSQLException(CAN_NOT_EXECUTE_SQL_ERROR_MESSAGE, ERROR_CODE);
         }
 

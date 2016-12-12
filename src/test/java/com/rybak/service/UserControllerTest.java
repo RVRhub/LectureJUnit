@@ -2,13 +2,13 @@ package com.rybak.service;
 
 import com.rybak.exception.UserSQLException;
 import com.rybak.model.dao.UserDAO;
+import com.rybak.model.dao.impl.UserDAOImpl;
 import com.rybak.model.dto.User;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import static org.mockito.Matchers.*;
 
@@ -25,6 +25,7 @@ public class UserControllerTest
     public static final long USER_ID = 5L;
     public static final String FIRST_NAME = "Roman";
     public static final String LAST_NAME = "Rybak";
+    private static final int INCORECT_USER_ID = -1;
 
 
     @Mock
@@ -36,16 +37,72 @@ public class UserControllerTest
         MockitoAnnotations.initMocks(this);
     }
 
+
     @Test
-    public void findByIdShouldRetrunOneUser() throws UserSQLException, SQLException
+    public void findByIdWithoutMockito() throws UserSQLException, SQLException
     {
+        //Setup
+        UserDAO userDAOMock = new UserDAOImpl()
+        {
+            public User findById(long id) throws SQLException {
+                return new User(USER_ID, FIRST_NAME, LAST_NAME);
+            }
+        };
+        UserController userController = new UserController(userDAOMock);
+
+        //Execution
+        boolean result = userController.ifUserExists(USER_ID);
+
+        //Verify
+        assertTrue(result);
+    }
+
+
+    @Test
+    public void findByIdShouldReturnOneUser() throws UserSQLException, SQLException
+    {
+        //Setup
         UserController userController = new UserController(userDAO);
 
         User user = new User(USER_ID, FIRST_NAME, LAST_NAME);
         when(userDAO.findById(anyLong())).thenReturn(user);
 
-        assertTrue(userController.showUsername(USER_ID));
+        //Execution
+        boolean result = userController.ifUserExists(USER_ID);
+
+        //Verify
+        assertTrue(result);
         verify(userDAO, times(1)).findById(USER_ID);
+    }
+
+    @Test
+    public void findByIdNotBeCall() throws UserSQLException, SQLException
+    {
+        //Setup
+        UserController userController = new UserController(userDAO);
+
+        //Execution
+        boolean result = userController.ifUserExists(INCORECT_USER_ID);
+
+        //Verify
+        assertFalse(result);
+        verify(userDAO, never()).findById(INCORECT_USER_ID);
+    }
+
+    @Test
+    public void findByIdShouldCapture() throws UserSQLException, SQLException
+    {
+        //Setup
+        UserController userController = new UserController(userDAO);
+
+        //Execution
+        userController.ifUserExists(USER_ID);
+
+        //Verification
+        ArgumentCaptor<Long> argument = ArgumentCaptor.forClass(Long.class);
+        verify(userDAO).findById(argument.capture());
+
+        assertEquals(USER_ID, (long) argument.getValue());
     }
 
 
@@ -53,16 +110,18 @@ public class UserControllerTest
     public void spyTest()
     {
         List list = new LinkedList();
-        List spy = spy(list);
+        List spyList = spy(list);
 
-        spy.add(0, "hi");
         //when(spy.get(0)).thenReturn("foo"); //IndexOutOfBoundsException
-        assertEquals("hi", spy.get(0));
 
-        doReturn("foo").when(spy).get(0);
-        spy.add(0, "hi");
+        spyList.add(0, "hi");
+        assertEquals("hi", spyList.get(0));
 
-        assertEquals("foo", spy.get(0));
+        doReturn("foo").when(spyList).get(0);
+        spyList.add(0, "hi");
+
+        assertEquals("foo", spyList.get(0));
+
     }
 
 }

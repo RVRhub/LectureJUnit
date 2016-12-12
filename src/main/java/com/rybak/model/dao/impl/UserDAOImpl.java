@@ -11,6 +11,7 @@ public class UserDAOImpl implements UserDAO
 
 
     public User findById(long id) throws SQLException {
+        //Call to DB
         return null;
     }
 
