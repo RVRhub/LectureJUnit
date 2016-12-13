@@ -62,17 +62,40 @@ public class UserControllerTest
     public void findByIdShouldReturnOneUser() throws UserSQLException, SQLException
     {
         //Setup
-        UserController userController = new UserController(userDAO);
+
+        UserDAO userDAOInner = mock(UserDAO.class);
+        UserController userController = new UserController(userDAOInner);
 
         User user = new User(USER_ID, FIRST_NAME, LAST_NAME);
-        when(userDAO.findById(anyLong())).thenReturn(user);
+        when(userDAOInner.findById(anyLong())).thenReturn(user);
 
         //Execution
         boolean result = userController.ifUserExists(USER_ID);
 
         //Verify
         assertTrue(result);
-        verify(userDAO, times(1)).findById(USER_ID);
+        verify(userDAOInner, times(1)).findById(USER_ID);
+    }
+
+    @Test(expected = UserSQLException.class)
+    public void checkSqlExceptionInFindById() throws UserSQLException, SQLException
+    {
+        //Setup
+
+        UserDAO userDAOInner = mock(UserDAO.class);
+        UserController userController = new UserController(userDAOInner);
+
+        try {
+            when(userDAOInner.findById(anyLong())).thenThrow(new SQLException());
+
+            //Execution
+            boolean result = userController.ifUserExists(USER_ID);
+        } finally {
+
+            //Verify
+            verify(userDAOInner, times(1)).findById(USER_ID);
+        }
+
     }
 
     @Test
@@ -109,8 +132,8 @@ public class UserControllerTest
     @Test
     public void spyTest()
     {
-        List list = new LinkedList();
-        List spyList = spy(list);
+        List<String> list = new LinkedList<>();
+        List<String> spyList = spy(list);
 
         //when(spy.get(0)).thenReturn("foo"); //IndexOutOfBoundsException
 
